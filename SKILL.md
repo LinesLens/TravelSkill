@@ -32,15 +32,34 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 
 ## 攻略生成阶段
 
+### MCP 工具降级策略
+
+优先使用 MCP 工具获取实时数据，不可用时降级到 WebSearch。每条数据标注来源类型：
+
+| 类别 | 用途 | MCP 优先 | 降级方案 |
+|------|------|----------|---------|
+| 地图/路线 | 景点距离、交通时间、路线规划 | Google Maps / Amap MCP | WebSearch 估算距离和通勤时间 |
+| 火车票 | 车次、票价、余票 | 12306 / Rail API MCP | WebSearch 查询参考车次和票价范围 |
+| 机票 | 航班时刻、价格对比 | Flight API / Skyscanner MCP | WebSearch 查询参考航班和价格范围 |
+| 天气 | 出行期间实时预报 | OpenWeather / 和风天气 MCP | WebSearch 查询历史天气趋势 |
+| 汇率 | 国际旅行预算换算 | Exchange Rate API MCP | WebSearch 查询近期汇率 |
+
+**降级规则：**
+- MCP 工具可用时：调用 MCP 获取数据，标注 `✅ 实时数据`
+- MCP 不可用时：使用 WebSearch 获取参考数据，标注 `📌 参考数据，建议出行前核实`
+- 每次使用前先检查可用 MCP 工具列表，按类别匹配
+
 ### 搜索信息来源
 
-在生成攻略内容前，搜索以下信息：
+在生成攻略内容前，根据 MCP 降级策略获取以下信息：
 
 - 目的地的核心景点、开放时间、门票价格
+- 景点间距离和推荐路线（地图 MCP 优先）
+- 大交通方案：机票/火车票（Flight/Rail MCP 优先）
 - 当地特色美食和推荐餐厅
-- 交通方式及大致费用
 - 住宿区域推荐
-- 当地天气趋势（基于出行时间）
+- 当地天气趋势（天气 MCP 优先）
+- 汇率预算换算（汇率 MCP 优先，国际旅行时）
 - 签证要求（中国护照）
 - 当地习俗和注意事项
 - 常用当地语言短语
