@@ -1,11 +1,11 @@
 ---
 name: travel-skill
-description: Use when the user wants to create a travel guide or itinerary - asks for destination, dates, budget, and preferences, then generates a comprehensive Markdown travel guide with images
+description: Use when the user wants to create a travel guide or itinerary - asks for destination, dates, budget, and preferences, then generates a comprehensive HTML travel guide with images and QR code for mobile sharing
 ---
 
 # Travel Skill
 
-通过对话收集用户偏好，生成包含图片的中文旅行攻略 Markdown 文件。
+通过对话收集用户偏好，生成包含图片的中文旅行攻略 HTML 文件，附带 QR 码方便手机扫码查看。
 
 ## 核心原则
 
@@ -92,11 +92,11 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 | 汇率 | Exchange Rate MCP | WebSearch 近期汇率 | 同上 |
 
 搜索内容清单：
-- 核心景点、开放时间、门票价格
+- 核心景点、开放时间、门票价格、**关键时间节点**（表演时间、换岗时间、最佳入场时间等）
 - 景点间距离和推荐路线（地图 MCP 优先）
 - 大交通方案：机票/火车票（Flight/Rail MCP 优先）
-- 当地特色美食和推荐餐厅（含预订提示）
-- 住宿区域推荐
+- 当地特色美食和推荐餐厅：**具体餐厅名称、地址、大众点评评分（0-5.0）、评论数、人均价格、必点菜品、预订方式**
+- 住宿区域推荐：**具体酒店名称、地址、大众点评评分（0-5.0）、评论数、人均价格/晚**
 - 当地交通卡/通票信息
 - 出行期间天气预报（天气 MCP 优先）
 - 汇率预算换算（汇率 MCP 优先，国际旅行场景）
@@ -104,17 +104,20 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 - 当地习俗和注意事项
 - 常用当地语言短语
 - 紧急联系方式
+- 大众点评/携程评分和评论数（餐厅和酒店必须标注）
 
 ### 攻略内容
 
 使用 `${CLAUDE_SKILL_DIR}/references/data-structure.md` 定义的数据结构组织信息。
 
 **以下内容默认包含，无需询问用户：**
+- **重大事件节点** — 每天 3-6 个带时间标注的关键节点（景点表演、用餐、转场等），以时间轴呈现
 - **雨天备选方案** — 每天行程附带 1-2 个室内备选活动
 - **交通卡/通票** — 当地交通卡信息及购买建议
 - **自由时间** — 每天预留 1-2 小时自由探索
 - **地图链接** — 景点间路线使用 Google Maps/Amap 短链接
 - **餐厅预订提示** — 热门餐厅是否需要提前预订及方式
+- **大众点评数据** — 餐厅和酒店必须标注评分（0-5.0）和评论数
 
 **生成后执行合理性校验：**
 - 同一天相邻景点间交通时间是否合理
@@ -154,13 +157,16 @@ Pexels 不可用时使用。
 
 ## 输出阶段
 
-使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的模板生成攻略文件。
+使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的 HTML 模板生成攻略文件。
 
-文件命名：`<目的地>-旅游攻略.md`
+文件命名：`<目的地>-旅游攻略.html`
 
 ### 校验清单
 
 输出前确认：
+- [ ] 每天包含 3-6 个重大事件节点（含时间），以时间轴形式呈现
+- [ ] 餐饮含具体餐厅名、地址、大众点评评分（0-5.0）、评论数
+- [ ] 住宿含具体酒店名、人均价格/晚、大众点评评分（0-5.0）、评论数、地址
 - [ ] 每天行程包含上午/下午/晚上/自由时间
 - [ ] 每天包含雨天备选方案
 - [ ] 交通卡/通票信息已包含
@@ -169,3 +175,54 @@ Pexels 不可用时使用。
 - [ ] 预算表覆盖所有类别
 - [ ] 每条数据标注来源类型（✅ 实时 / 📌 参考）
 - [ ] 图片 URL 可访问
+- [ ] HTML 移动端适配（viewport + 响应式 CSS）
+- [ ] QR 码区域已嵌入，可正常生成
+
+## QR 码与手机分享阶段
+
+攻略 HTML 生成后，执行以下步骤让用户可扫码在手机上查看：
+
+### 第一步：启动本地 HTTP 服务
+
+在攻略文件所在目录启动 Python HTTP 服务（后台运行）：
+
+```bash
+cd <输出目录> && python3 -m http.server 8899 &
+```
+
+### 第二步：获取本机局域网 IP
+
+```bash
+hostname -I | awk '{print $1}'
+```
+
+### 第三步：生成并展示 QR 码
+
+**方案 A — 终端 ASCII QR 码（推荐，无需额外依赖）：**
+
+```bash
+python3 -c "
+import urllib.request, sys
+url = 'http://<IP>:8899/<文件名>.html'
+api = f'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.request.quote(url)}'
+urllib.request.urlretrieve(api, '/tmp/travel_qr.png')
+print(f'QR 码已保存: /tmp/travel_qr.png')
+print(f'手机扫码地址: {url}')
+"
+```
+
+**方案 B — 终端直接显示 ASCII QR 码：**
+
+使用 `curl "qrenco.de/<URL编码后的地址>"` 在终端直接显示 ASCII 二维码。
+
+**方案 C — HTML 内嵌自生成（已默认包含）：**
+
+HTML 模板已内嵌 qrcodejs 库，页面在浏览器中打开后自动在底部生成当前页 URL 的二维码，手机间互传无需额外操作。
+
+### 第四步：引导用户分享
+
+告知用户：
+1. 确保手机和电脑连接同一 Wi-Fi
+2. 使用手机相机扫描终端显示的 QR 码图片（或 HTML 页面底部的 QR 码）
+3. 手机浏览器打开攻略后，可「添加到主屏幕」实现离线查看
+4. 如需停止服务：`pkill -f "python3 -m http.server 8899"`

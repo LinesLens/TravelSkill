@@ -59,6 +59,7 @@ TravelGuide
 | afternoon | ActivitySlot | 下午活动 |
 | evening | ActivitySlot | 晚上活动 |
 | free_time | string | 自由探索时间建议 |
+| milestones[] | Milestone | 当日重大事件节点（3-6 个），按时间排序 |
 | attractions[] | Attraction | 当日景点 |
 | food[] | Food | 当日美食推荐 |
 | transportation | string | 当日交通建议 |
@@ -73,6 +74,16 @@ TravelGuide
 | activity | string | 活动描述 |
 | duration | string | 预估耗时 |
 | notes | string | 备注 |
+
+## Milestone
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| time | string | 具体时间（如"10:30"） |
+| icon | string | emoji 图标（如 🎯 📸 🍜 🏛️ 🚇 🎪） |
+| event | string | 事件名称（简短，如"观看换岗仪式"） |
+| description | string | 详细说明（1 句） |
+| notes | string | 实用提示（可选，如"建议提前 10 分钟占位"） |
 
 ## Attraction
 
@@ -92,9 +103,13 @@ TravelGuide
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | name | string | 菜品/餐厅名称 |
+| restaurant_name | string | 具体餐厅名称（如"四季民福烤鸭店(故宫店)"） |
 | type | enum | `restaurant` / `street_food` / `specialty` |
 | description | string | 简介 |
-| price_per_person | string | 人均价格 |
+| address | string | 餐厅地址 |
+| price_per_person | string | 人均价格（如"¥120-150"） |
+| dianping_rating | float | 大众点评评分（0-5.0） |
+| review_count | string | 大众点评评论数（如"1.2万"） |
 | must_try | string[] | 推荐菜品 |
 | reservation | string | 预订提示（是否需要、如何预订） |
 | image_query | string | 图片搜索关键词（英文） |
@@ -110,9 +125,13 @@ TravelGuide
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
+| hotel_name | string | 具体酒店名称（如"北京王府井希尔顿"） |
 | area | string | 推荐区域 |
 | type | string | 住宿类型 |
-| price_range | string | 价格区间 |
+| address | string | 酒店地址 |
+| price_per_person | string | 人均价格/晚（如"¥300-500"） |
+| dianping_rating | float | 大众点评评分（0-5.0） |
+| review_count | string | 大众点评评论数（如"8500"） |
 | pros | string | 优势 |
 | image_query | string | 图片搜索关键词 |
 
