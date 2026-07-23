@@ -14,6 +14,48 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 - 所有输出使用中文
 - 攻略数据结构统一，按层级展示
 
+## MCP 环境准备阶段
+
+**在询问任何旅行信息之前，必须先完成 MCP 环境检查。**
+
+### 第一步：扫描可用 MCP
+
+检查当前环境已安装的 MCP 工具，列出所有可用的工具名称。
+
+### 第二步：对照旅行 MCP 需求表
+
+逐一检查以下五类 MCP 是否已安装：
+
+| # | 类别 | 常见 MCP 名称 | 用途 |
+|---|------|--------------|------|
+| 1 | 地图 | `@anthropic/mcp-server-google-maps` / `amap-mcp` / `gaode-mcp` | 路线规划、距离计算、交通时间 |
+| 2 | 火车票 | `rail-api-mcp` / `12306-mcp` | 车次查询、票价、余票 |
+| 3 | 机票 | `flight-api-mcp` / `skyscanner-mcp` | 航班时刻、价格对比 |
+| 4 | 天气 | `openweather-mcp` / `qweather-mcp` | 目的地实时天气预报 |
+| 5 | 汇率 | `exchange-rate-mcp` | 国际旅行货币换算 |
+
+### 第三步：逐个询问缺失的 MCP
+
+对每个缺失的 MCP，按上述顺序逐一询问用户：
+
+> "我没有检测到 **[MCP 名称]**，它可以在做攻略时提供 **[具体价值]**。要我帮你安装配置吗？"
+
+- 用户同意 → 进入第四步协助安装
+- 用户拒绝或跳过 → 标记为该类别使用降级方案（WebSearch），继续下一个
+- 所有 MCP 检查完毕后 → 进入信息收集阶段
+
+### 第四步：协助安装 MCP
+
+用户同意安装某个 MCP 时，执行以下操作：
+
+1. 使用 `WebSearch` 搜索该 MCP 的最新安装文档和 npm 包名
+2. 向用户说明安装步骤：
+   - 用 `npm install -g <mcp-package>` 或 `npx <mcp-package>` 安装
+   - 在 Claude Code 的 MCP 配置文件中添加对应配置
+3. 确认用户完成安装后，继续下一个缺失 MCP 的询问
+
+**注意：** 不要自动执行安装命令，只提供清晰的安装指引让用户操作。
+
 ## 信息收集阶段
 
 依次询问以下信息，一次一个问题：
