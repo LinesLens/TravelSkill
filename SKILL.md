@@ -1,11 +1,11 @@
 ---
 name: travel-skill
-description: Use when the user wants to create a travel guide or itinerary - asks for destination, dates, budget, and preferences, then generates a comprehensive HTML travel guide with images and QR code for mobile sharing
+description: Use when the user wants to create a travel guide or itinerary - asks for destination, dates, budget, and preferences, then generates a comprehensive Markdown travel guide + HTML mobile viewer with QR code sharing
 ---
 
 # Travel Skill
 
-通过对话收集用户偏好，生成包含图片的中文旅行攻略 HTML 文件，附带 QR 码方便手机扫码查看。
+通过对话收集用户偏好，生成中文旅行攻略 Markdown 文档 + HTML 移动端查看器，附带 QR 码方便手机扫码查看。
 
 ## 核心原则
 
@@ -16,6 +16,8 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 - 攻略数据结构统一，按层级展示
 - 行程节奏从兴趣偏好自动推断（"休闲度假"→悠闲，"户外探险"→紧凑，默认适中）
 - 雨天备选方案默认包含，无需询问
+- **默认用餐时间：早餐 08:30、午餐 11:30、晚餐 18:00**，根据当天行程可微调 ±30 分钟
+- **关键时间节点（发车、入园、表演等）必须高亮标注**
 
 ## 参考文档
 
@@ -111,7 +113,8 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 使用 `${CLAUDE_SKILL_DIR}/references/data-structure.md` 定义的数据结构组织信息。
 
 **以下内容默认包含，无需询问用户：**
-- **重大事件节点** — 每天 3-6 个带时间标注的关键节点（景点表演、用餐、转场等），以时间轴呈现
+- **每日三餐** — 每天行程必须包含早餐（🥣 08:30）、午餐（🥢 11:30）、晚餐（🍖 18:00），以独立的带高亮样式行呈现。用餐时间可根据当天行程微调 ±30 分钟（如赶早班车则早餐提前至 08:00），但必须标注具体时间
+- **重大事件节点** — 每天 5-8 个带时间标注的关键节点。三餐和重要时间点（发车、入园、表演、返程等）必须使用彩色时间徽章（`.key-time`）突出显示，普通活动使用标准时间轴样式
 - **雨天备选方案** — 每天行程附带 1-2 个室内备选活动
 - **交通卡/通票** — 当地交通卡信息及购买建议
 - **自由时间** — 每天预留 1-2 小时自由探索
@@ -157,14 +160,18 @@ Pexels 不可用时使用。
 
 ## 输出阶段
 
-使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的 HTML 模板生成攻略文件。
+使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的模板生成两个文件：
 
-文件命名：`<目的地>-旅游攻略.html`
+1. **`<目的地>-旅游攻略.md`** — Markdown 主文档，适合编辑和版本管理
+2. **`<目的地>-旅游攻略.html`** — HTML 移动端查看器，适合手机扫码查看（含 QR 码）
+
+两个文件内容一致，格式不同。
 
 ### 校验清单
 
 输出前确认：
-- [ ] 每天包含 3-6 个重大事件节点（含时间），以时间轴形式呈现
+- [ ] 每天包含早餐（08:30）、午餐（11:30）、晚餐（18:00），含具体餐厅、人均、评分
+- [ ] 每天包含 5-8 个重大事件节点（含三餐 + 关键活动），时间轴形式呈现
 - [ ] 餐饮含具体餐厅名、地址、大众点评评分（0-5.0）、评论数
 - [ ] 住宿含具体酒店名、人均价格/晚、大众点评评分（0-5.0）、评论数、地址
 - [ ] 每天行程包含上午/下午/晚上/自由时间
@@ -175,12 +182,12 @@ Pexels 不可用时使用。
 - [ ] 预算表覆盖所有类别
 - [ ] 每条数据标注来源类型（✅ 实时 / 📌 参考）
 - [ ] 图片 URL 可访问
-- [ ] HTML 移动端适配（viewport + 响应式 CSS）
-- [ ] QR 码区域已嵌入，可正常生成
+- [ ] `.md` 文档格式完整，表格对齐
+- [ ] `.html` 移动端适配（viewport + 响应式 CSS），QR 码可正常生成
 
 ## QR 码与手机分享阶段
 
-攻略 HTML 生成后，执行以下步骤让用户可扫码在手机上查看：
+两个文件生成完成后，执行以下步骤让用户可扫码在手机上查看 HTML 攻略：
 
 ### 第一步：启动本地 HTTP 服务
 
@@ -198,12 +205,14 @@ hostname -I | awk '{print $1}'
 
 ### 第三步：生成并展示 QR 码
 
-**方案 A — 终端 ASCII QR 码（推荐，无需额外依赖）：**
+QR 码指向 HTML 查看器（移动端友好渲染）：
+
+**方案 A — 下载 QR 图片（推荐）：**
 
 ```bash
 python3 -c "
-import urllib.request, sys
-url = 'http://<IP>:8899/<文件名>.html'
+import urllib.request
+url = 'http://<IP>:8899/<目的地>-旅游攻略.html'
 api = f'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.request.quote(url)}'
 urllib.request.urlretrieve(api, '/tmp/travel_qr.png')
 print(f'QR 码已保存: /tmp/travel_qr.png')
@@ -211,18 +220,19 @@ print(f'手机扫码地址: {url}')
 "
 ```
 
-**方案 B — 终端直接显示 ASCII QR 码：**
+**方案 B — 终端 ASCII QR 码：**
 
 使用 `curl "qrenco.de/<URL编码后的地址>"` 在终端直接显示 ASCII 二维码。
 
 **方案 C — HTML 内嵌自生成（已默认包含）：**
 
-HTML 模板已内嵌 qrcodejs 库，页面在浏览器中打开后自动在底部生成当前页 URL 的二维码，手机间互传无需额外操作。
+HTML 模板已内嵌 qrcodejs 库，页面在浏览器中打开后自动在底部生成当前页 URL 的二维码。
 
 ### 第四步：引导用户分享
 
 告知用户：
 1. 确保手机和电脑连接同一 Wi-Fi
-2. 使用手机相机扫描终端显示的 QR 码图片（或 HTML 页面底部的 QR 码）
-3. 手机浏览器打开攻略后，可「添加到主屏幕」实现离线查看
-4. 如需停止服务：`pkill -f "python3 -m http.server 8899"`
+2. 使用手机相机扫描 QR 码图片（或 HTML 页面底部的 QR 码）
+3. 手机浏览器打开 HTML 攻略后，可「添加到主屏幕」实现离线查看
+4. `.md` 文档可用 Markdown 阅读器或文本编辑器查看编辑
+5. 如需停止服务：`pkill -f "python3 -m http.server 8899"`
