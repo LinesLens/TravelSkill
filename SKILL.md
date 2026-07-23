@@ -23,9 +23,9 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 
 | 文档 | 路径 | 何时加载 |
 |------|------|---------|
-| 数据结构定义 | `${CLAUDE_PLUGIN_ROOT}/references/data-structure.md` | 攻略生成阶段 |
-| MCP 集成策略 | `${CLAUDE_PLUGIN_ROOT}/references/mcp-integration.md` | MCP 准备阶段 |
-| 输出模板 | `${CLAUDE_PLUGIN_ROOT}/references/output-template.md` | 输出阶段 |
+| 数据结构定义 | `${CLAUDE_SKILL_DIR}/references/data-structure.md` | 攻略生成阶段 |
+| MCP 集成策略 | `${CLAUDE_SKILL_DIR}/references/mcp-integration.md` | MCP 准备阶段 |
+| 输出模板 | `${CLAUDE_SKILL_DIR}/references/output-template.md` | 输出阶段 |
 
 ## MCP 环境准备阶段
 
@@ -107,7 +107,7 @@ description: Use when the user wants to create a travel guide or itinerary - ask
 
 ### 攻略内容
 
-使用 `${CLAUDE_PLUGIN_ROOT}/references/data-structure.md` 定义的数据结构组织信息。
+使用 `${CLAUDE_SKILL_DIR}/references/data-structure.md` 定义的数据结构组织信息。
 
 **以下内容默认包含，无需询问用户：**
 - **雨天备选方案** — 每天行程附带 1-2 个室内备选活动
@@ -154,7 +154,7 @@ Pexels 不可用时使用。
 
 ## 输出阶段
 
-使用 `${CLAUDE_PLUGIN_ROOT}/references/output-template.md` 中的模板生成攻略文件。
+使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的模板生成攻略文件。
 
 文件命名：`<目的地>-旅游攻略.md`
 
