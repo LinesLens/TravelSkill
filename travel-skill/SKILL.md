@@ -160,12 +160,29 @@ Pexels 不可用时使用。
 
 ## 输出阶段
 
-使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的模板生成两个文件：
+### 检测前端工具
 
-1. **`<目的地>-旅游攻略.md`** — Markdown 主文档，适合编辑和版本管理
-2. **`<目的地>-旅游攻略.html`** — HTML 移动端查看器，适合手机扫码查看（含 QR 码）
+在生成输出之前，检查系统提供的 skill 列表和 MCP 工具中是否有前端相关工具：
 
-两个文件内容一致，格式不同。
+- `frontend-design` skill — 优先使用，可生成高质量 Markdown + HTML
+- `mcp__ide__executeCode` — 可用于辅助渲染和预览
+
+### 方案 A：有前端插件（优先）
+
+如果 `frontend-design` skill 可用，使用它生成两个文件：
+
+1. **`<目的地>-旅游攻略.md`** — Markdown 主文档
+2. **`<目的地>-旅游攻略.html`** — HTML 移动端查看器（含 QR 码）
+
+传递给前端插件的信息：
+- 攻略全部数据（概要、每日行程、住宿、预算、实用信息、图片 URL 等）
+- 设计约束：旅行主题暖色调（#e8724a 主色），移动端优先响应式
+- HTML 必须包含：目录导航、时间轴（`.timeline`）、关键时间徽章（`.key-time`）、大众点评评分徽章、QR 码自生成（qrcodejs CDN）
+- `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的模板结构和 CSS 变量作为参考基线
+
+### 方案 B：无前端插件（降级）
+
+如果前端插件不可用，使用 `${CLAUDE_SKILL_DIR}/references/output-template.md` 中的模板手动生成两个文件，格式与方案 A 一致。
 
 ### 校验清单
 
