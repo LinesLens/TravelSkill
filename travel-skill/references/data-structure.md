@@ -55,16 +55,26 @@ TravelGuide
 | day_number | int | 第几天 |
 | date | string | 日期 |
 | theme | string | 当日主题（如"古都文化之旅"） |
+| meals[] | MealSlot | 当日三餐（早餐/午餐/晚餐），默认时间：早餐 08:30、午餐 11:30、晚餐 18:00 |
 | morning | ActivitySlot | 上午活动 |
 | afternoon | ActivitySlot | 下午活动 |
 | evening | ActivitySlot | 晚上活动 |
 | free_time | string | 自由探索时间建议 |
-| milestones[] | Milestone | 当日重大事件节点（3-6 个），按时间排序 |
+| milestones[] | Milestone | 当日重大事件节点（5-8 个），按时间排序。三餐和关键时间点（发车、入园、表演等）必须用 `highlight: true` 标记 |
 | attractions[] | Attraction | 当日景点 |
 | food[] | Food | 当日美食推荐 |
 | transportation | string | 当日交通建议 |
 | map_link | string | 当日路线地图短链接 |
 | rainy_alternative | RainyPlan | 雨天备选方案 |
+
+## MealSlot
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| type | enum | `breakfast` / `lunch` / `dinner` |
+| default_time | string | 默认时间：早餐 `08:30`、午餐 `11:30`、晚餐 `18:00`（可根据当天行程微调 ±30 分钟） |
+| activity | string | 用餐内容（如"酒店早餐"、"过油肉拌面"） |
+| notes | string | 备注（如餐厅名、人均、必点菜） |
 
 ## ActivitySlot
 
@@ -80,10 +90,11 @@ TravelGuide
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | time | string | 具体时间（如"10:30"） |
-| icon | string | emoji 图标（如 🎯 📸 🍜 🏛️ 🚇 🎪） |
+| icon | string | emoji 图标（如 🎯 📸 🍜 🏛️ 🚇 🎪 🥣 🥢 🍖） |
 | event | string | 事件名称（简短，如"观看换岗仪式"） |
 | description | string | 详细说明（1 句） |
 | notes | string | 实用提示（可选，如"建议提前 10 分钟占位"） |
+| highlight | bool | 是否为关键时间节点。三餐（早餐 08:30 / 午餐 11:30 / 晚餐 18:00）以及发车、入园、表演等必须设为 `true`，输出时使用彩色时间徽章突出显示 |
 
 ## Attraction
 
